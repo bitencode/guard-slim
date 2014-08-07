@@ -61,6 +61,10 @@ module Guard
 
       def render(source)
         Template.new(@slim) { source }.render(@context)
+      rescue SyntaxError => ex
+        UI.info se.message
+      rescue Exception => ex
+        UI.info e.message
       end
 
 
