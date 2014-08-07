@@ -9,10 +9,10 @@ module Guard
     Template = ::Slim::Template
 
     def initialize(watchers = [], options = {})
-      @output_root = options.delete(:output) || options.delete(:output_root) || Dir.getwd
-      @input_root  = options.delete(:input)  || options.delete(:input_root)  || Dir.getwd
-      @context     = options.delete(:context) || Object.new
-      @slim        = options.delete(:slim) || {}
+      @output   = options.delete(:output)  || options.delete(:output_root) || Dir.getwd
+      @input    = options.delete(:input)   || options.delete(:input_root)  || Dir.getwd
+      @context  = options.delete(:context) || Object.new
+      @slim     = options.delete(:slim)    || {}
 
       super watchers, options
     end
@@ -47,7 +47,7 @@ module Guard
     protected
 
       def build_path(path)
-        path     = File.expand_path(path).sub @input_root, @output_root
+        path     = File.expand_path(path).sub @input, @output
         dirname  = File.dirname path
 
         FileUtils.mkpath dirname unless File.directory? dirname
@@ -65,7 +65,7 @@ module Guard
 
 
       def all_paths
-        Watcher.match_files self, Dir[ALL]
+        Watcher.match_files self, Dir[File.join(@input, ALL)]
       end
   end
 end
