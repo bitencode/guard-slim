@@ -9,21 +9,25 @@ module Guard
     Template = ::Slim::Template
 
     def initialize(watchers = [], options = {})
-      @output_root = options.delete(:output_root) || Dir.getwd
-      @input_root  = options.delete(:input_root) || Dir.getwd
+      @output_root = options.delete(:output) || options.delete(:output_root) || Dir.getwd
+      @input_root  = options.delete(:input)  || options.delete(:input_root)  || Dir.getwd
       @context     = options.delete(:context) || Object.new
       @slim        = options.delete(:slim) || {}
 
       super watchers, options
     end
 
+
     def start
       UI.info 'Guard-Slim: Waiting for changes...'
     end
 
+
     def run_all
       run_on_change all_paths
     end
+
+
     def run_on_change(paths)
       paths.each do |path|
         begin
@@ -53,12 +57,15 @@ module Guard
 
         File.join dirname, basename
       end
+
+
       def render(source)
-        Template.new( @slim ) { source }.render @context
-      end
-      def all_paths
-        Watcher.match_files self, Dir[ ALL ]
+        Template.new(@slim) { source }.render(@context)
       end
 
+
+      def all_paths
+        Watcher.match_files self, Dir[ALL]
+      end
   end
 end
