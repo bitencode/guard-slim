@@ -1,6 +1,6 @@
-require 'guard'
+require 'guard/ui'
 require 'guard/plugin'
-# require 'guard/watcher'
+
 require 'slim'
 require 'fileutils'
 
@@ -10,10 +10,11 @@ module Guard
     Template = ::Slim::Template
 
     def initialize(options = {})
-      UI.deprecation(":input_root has been replaced with :input") if @input = options.delete(:input_root)
-      UI.deprecation(":output_root has been replaced with :output") if @output = options.delete(:output_root)
-      @output   = options.delete(:output)  { Dir.getwd }
-      @input    = options.delete(:input)   { Dir.getwd }
+      # binding.pry
+      ::Guard::UI.deprecation(":input_root has been replaced with :input") if @input = options.delete(:input_root)
+      ::Guard::UI.deprecation(":output_root has been replaced with :output") if @output = options.delete(:output_root)
+      @output   ||= options.delete(:output)  { Dir.getwd }
+      @input    ||= options.delete(:input)   { Dir.getwd }
       @context  = options.delete(:context) { Object.new }
       @slim     = options.delete(:slim)    { Hash.new }
 
@@ -22,17 +23,17 @@ module Guard
 
 
     def start
-      UI.info 'Guard-Slim: Waiting for changes...'
+      ::Guard::UI.info 'Guard-Slim: Waiting for changes...'
     end
 
 
     def stop
-      UI.info "Guard-Slim: Stopping."
+      ::Guard::UI.info "Guard-Slim: Stopping."
     end
 
 
     def reload
-      UI.info "Guard-Slim: Reload."
+      ::Guard::UI.info "Guard-Slim: Reload."
     end
 
 
@@ -50,9 +51,9 @@ module Guard
               file.puts(content) :
               file.write(content)
           end
-          UI.info "Guard-Slim: Rendered #{ path } to #{ build_path path }"
+          ::Guard::UI.info "Guard-Slim: Rendered #{ path } to #{ build_path path }"
         rescue StandardError => error
-          UI.info "Slim Error: " + error.message
+          ::Guard::UI.info "Slim Error: " + error.message
         end
       end
     end
@@ -64,7 +65,7 @@ module Guard
 
 
     def run_on_removals(paths)
-      UI.info "Guard-Slim: Removal - not implemented yet."
+      ::Guard::UI.info "Guard-Slim: Removal - not implemented yet."
     end
 
     protected
@@ -85,9 +86,9 @@ module Guard
       def render(source)
         Template.new(@slim) { source }.render(@context)
       rescue SyntaxError => ex
-        UI.info se.message
+        ::Guard::UI.info se.message
       rescue Exception => ex
-        UI.info e.message
+        ::Guard::UI.info e.message
       end
 
 
