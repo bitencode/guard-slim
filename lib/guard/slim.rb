@@ -1,4 +1,4 @@
-require 'guard/ui'
+require 'guard'
 require 'guard/plugin'
 
 require 'slim'
@@ -9,12 +9,13 @@ module Guard
     ALL      = File.join '**', '*'
     Template = ::Slim::Template
 
+    attr_reader :input, :output, :context, :slim
+
     def initialize(options = {})
-      # binding.pry
       ::Guard::UI.deprecation(":input_root has been replaced with :input") if @input = options.delete(:input_root)
       ::Guard::UI.deprecation(":output_root has been replaced with :output") if @output = options.delete(:output_root)
-      @output   ||= options.delete(:output)  { Dir.getwd }
       @input    ||= options.delete(:input)   { Dir.getwd }
+      @output   ||= options.delete(:output)  { Dir.getwd }
       @context  = options.delete(:context) { Object.new }
       @slim     = options.delete(:slim)    { Hash.new }
 
@@ -23,31 +24,40 @@ module Guard
 
 
     def start
-      ::Guard::UI.info 'Guard-Slim: Waiting for changes...'
+      if options[:compile_on_start]
+        UI.info 'Guard-Slim: is going to compile your markup.'
+        run_all
+      else
+        ::Guard::UI.info 'Guard-Slim: Waiting for changes...'
+        true
+      end
     end
 
 
     def stop
-      ::Guard::UI.info "Guard-Slim: Stopping."
+      true
     end
 
 
     def reload
       ::Guard::UI.info "Guard-Slim: Reload."
+      true
     end
 
 
     def run_all
+      ::Guard::UI.info "Guard-Slim: Run All."
       run_on_changes all_paths
     end
 
 
     def run_on_changes(paths)
+      ::Guard::UI.info "Guard-Slim: Run On Changes (#{paths.inspect})."
       paths.each do |path|
         begin
           content = render File.read(path)
           open(build_path(path), 'w') do |file|
-            @slim[:pretty] ?
+            slim[:pretty] ?
               file.puts(content) :
               file.write(content)
           end
@@ -56,6 +66,7 @@ module Guard
           ::Guard::UI.info "Slim Error: " + error.message
         end
       end
+      true
     end
 
 
@@ -66,12 +77,13 @@ module Guard
 
     def run_on_removals(paths)
       ::Guard::UI.info "Guard-Slim: Removal - not implemented yet."
+      true
     end
 
     protected
 
       def build_path(path)
-        path     = File.expand_path(path).sub @input, @output
+        path     = File.expand_path(path).sub input, output
         dirname  = File.dirname path
 
         FileUtils.mkpath dirname unless File.directory? dirname
@@ -84,7 +96,7 @@ module Guard
 
 
       def render(source)
-        Template.new(@slim) { source }.render(@context)
+        Template.new(@slim) { source }.render(context)
       rescue SyntaxError => ex
         ::Guard::UI.info se.message
       rescue Exception => ex
@@ -93,7 +105,7 @@ module Guard
 
 
       def all_paths
-        Watcher.match_files self, Dir[File.join(@input, ALL)]
+        Watcher.match_files self, Dir[File.join(input, ALL)]
       end
   end
 end
