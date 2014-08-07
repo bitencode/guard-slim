@@ -1,20 +1,23 @@
-require 'guard/guard'
-require 'guard/watcher'
+require 'guard'
+require 'guard/plugin'
+# require 'guard/watcher'
 require 'slim'
 require 'fileutils'
 
 module Guard
-  class Slim < Guard
+  class Slim < Plugin
     ALL      = File.join '**', '*'
     Template = ::Slim::Template
 
-    def initialize(watchers = [], options = {})
-      @output   = options.delete(:output)  || options.delete(:output_root) || Dir.getwd
-      @input    = options.delete(:input)   || options.delete(:input_root)  || Dir.getwd
-      @context  = options.delete(:context) || Object.new
-      @slim     = options.delete(:slim)    || {}
+    def initialize(options = {})
+      UI.deprecation(":input_root has been replaced with :input") if @input = options.delete(:input_root)
+      UI.deprecation(":output_root has been replaced with :output") if @output = options.delete(:output_root)
+      @output   = options.delete(:output)  { Dir.getwd }
+      @input    = options.delete(:input)   { Dir.getwd }
+      @context  = options.delete(:context) { Object.new }
+      @slim     = options.delete(:slim)    { Hash.new }
 
-      super watchers, options
+      super
     end
 
 
@@ -23,12 +26,22 @@ module Guard
     end
 
 
-    def run_all
-      run_on_change all_paths
+    def stop
+      UI.info "Guard-Slim: Stopping."
     end
 
 
-    def run_on_change(paths)
+    def reload
+      UI.info "Guard-Slim: Reload."
+    end
+
+
+    def run_all
+      run_on_changes all_paths
+    end
+
+
+    def run_on_changes(paths)
       paths.each do |path|
         begin
           content = render File.read(path)
@@ -42,6 +55,16 @@ module Guard
           UI.info "Slim Error: " + error.message
         end
       end
+    end
+
+
+    def run_on_additions(paths)
+      run_on_changes paths
+    end
+
+
+    def run_on_removals(paths)
+      UI.info "Guard-Slim: Removal - not implemented yet."
     end
 
     protected
