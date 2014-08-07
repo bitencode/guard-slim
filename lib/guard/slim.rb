@@ -104,6 +104,7 @@ module Guard
         ::Guard::UI.info se.message
       rescue Exception => ex
         ::Guard::UI.info ex.message
+        print ex.backtrace * "\n"
       end
 
 
