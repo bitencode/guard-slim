@@ -17,7 +17,7 @@ module Guard
       @input     ||= options.delete(:input) { Dir.getwd }
       @output    ||= options.delete(:output) { Dir.getwd }
       @context   = options.delete(:context) { Object.new }
-      @slim_opts = Hash(options.delete(:slim))
+      @slim_opts = options.delete(:slim) { Hash.new }
       @slim_plugins = Array(slim_opts.delete(:plugins))
 
       super
